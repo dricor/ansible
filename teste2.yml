@@ -1,0 +1,60 @@
+---
+- hosts: zup
+  remote_user: user
+  vars:
+    campos_cert: "/C=BR/ST=SP/L=SP/O=ZUP/CN=ZUP"
+  tasks:
+  - name: Instalando o Java
+    yum: state=latest name=java-1.8.0-openjdk
+    sudo: yes
+
+  - name: Instalando o Tomcat 
+    yum: state=latest name=tomcat
+    sudo: yes
+
+  - name: Instalando repositório EPEL
+    yum: state=present name=epel-release
+    sudo: yes
+
+  - name: Instalando NGINX
+    yum: state=latest name=nginx
+    sudo: yes
+
+  - name: Instalando OpenSSL
+    yum: state=latest name=openssl
+    sudo: yes
+  
+  - include: ssl.yml
+    sudo: yes
+
+  - name: Aplicando SSL NGINX
+    template: src=ssl.conf dest=/etc/nginx/conf.d/ssl.conf
+    sudo: yes
+
+  - name: Instalando MongoDB
+    yum: state=latest name=mongodb
+    sudo: yes
+
+  - name: Instalando pymongo
+    yum: state=latest name=python-pymongo
+    sudo: yes
+
+  - name: Reiniciando MongoDB
+    service: name=mongod state=started
+    sudo: yes
+
+  - name: Criando base de dados e usuário
+    mongodb_user: database=zupdb name=user password=12345 state=present
+    sudo: yes
+
+  - name: Instalando libselinux-python
+    yum: state=present name=libselinux-python
+    sudo: yes
+
+  - name: Regras no Firewall
+    template: src=regras-firewall dest=/etc/sysconfig/iptables
+    sudo: yes
+
+  - name: Reiniciando iptables
+    service: name=iptables state=restarted
+    sudo: yes

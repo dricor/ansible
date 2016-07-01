@@ -1,0 +1,20 @@
+---
+  - name: Gerando chave RSA
+    command: openssl genrsa -out /etc/ssl/certs/zup.key 2048
+
+  - name: Atribuindo Chave RSA ao dono
+    file: path=/etc/ssl/certs/zup.key owner=nginx group=nginx mode=0644
+
+  - name: Gerando CSR
+    command: openssl req -new -sha256 -subj "{{ campos_cert }}" -key /etc/ssl/certs/zup.key -out /etc/ssl/certs/zup.csr
+
+  - name: Dono do CSR
+    file: path=/etc/ssl/certs/zup.csr owner=nginx group=nginx mode=0644
+
+  - name: Gerando o certificado auto-assinado
+    command: openssl req -nodes -x509 -days 365 -in /etc/ssl/certs/zup.csr -key /etc/ssl/certs/zup.key -out /etc/ssl/certs/zup.crt -extensions v3_ca
+    when: true
+
+  - name: Self-signed SSL certificate file ownership
+    file: path=/etc/ssl/certs/zup.crt owner=nginx group=nginx mode=0644
+    when: true
